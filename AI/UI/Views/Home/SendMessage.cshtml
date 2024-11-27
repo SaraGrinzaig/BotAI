@@ -1,0 +1,421 @@
+﻿@model AIServiceViewModel
+@{
+    ViewData["Title"] = "Send Message";
+}
+
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>@ViewData["Title"]</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        #clearHistoryBtn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-size: 0.8rem;
+        }
+
+        .chat-container {
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 20px;
+            background: #ffffff;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .chat-header {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            position: relative;
+            padding-right: 150px; /* Make room for the button */
+        }
+
+        .chat-box {
+            margin-bottom: 20px;
+        }
+
+            .chat-box textarea {
+                resize: none;
+            }
+
+        .chat-response {
+            background: #f1f1f1;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .btn-send {
+            width: 100%;
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+            .message img {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                margin-left: 10px;
+            }
+
+        .message-content {
+            background: #e9ecef;
+            padding: 10px 15px;
+            border-radius: 15px;
+        }
+
+            .message-content.user {
+                background: #007bff;
+                color: #fff;
+            }
+
+            .message-content.bot {
+                background: #f1f1f1;
+            }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+        }
+
+            .notification.success {
+                background-color: #4CAF50;
+            }
+
+            .notification.error {
+                background-color: #f44336;
+            }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(0, 123, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #007bff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @@keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .processing {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            margin-right: 50px;
+        }
+
+            .processing span {
+                order: -1;
+                margin-left: 10px;
+            }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            קניון ליין AI
+@*             <button id="clearHistoryBtn" class="btn btn-primary btn-sm float-end">נקה היסטוריית שיחה</button>
+ *@
+        </div>
+        <p>AI Service: <span id="aiServiceType">@Model.AIServiceType</span></p>
+        <div class="chat-response" id="chat-response">
+            <!-- Messages will be appended here -->
+        </div>
+        <div class="chat-box">
+            <label for="message" class="form-label">הודעה</label>
+            <textarea id="message" class="form-control" rows="4" placeholder="הקלד הודעתך כאן..."></textarea>
+        </div>
+        <button class="btn btn-primary btn-send" onclick="sendMessage()">שלח</button>
+        <br />
+        <br />
+        <br />
+
+        <div class="mt-3">
+            <button class="btn btn-danger" onclick="clearConversationHistory()">נקה היסטוריית שיחה</button>
+            <button class="btn btn-secondary" onclick="switchAIService()">החלף שירות AI</button>
+        </div>
+
+        <script>
+            let userDetails = {};
+            let awaitingUserInput = false;
+            let currentMissingDetail = '';
+            let useOpenAI = @Json.Serialize(Model.UseOpenAI);
+
+            document.addEventListener("DOMContentLoaded", function () {
+                console.log("Using AI service:", useOpenAI ? "OpenAI" : "ClaudeAI");
+                updateAIServiceDisplay();
+                setupEnterKeyHandler();
+
+            });
+
+            function updateAIServiceDisplay() {
+                document.getElementById("aiServiceType").textContent = useOpenAI ? "OpenAI" : "ClaudeAI";
+            }
+
+            async function sendMessage() {
+                if (awaitingUserInput) {
+                    handleUserInput(document.getElementById('message').value);
+                    return;
+                }
+                const message = document.getElementById('message').value;
+                if (!message) return;
+
+                appendMessage('user', message);
+                document.getElementById('message').value = '';
+
+                const processingMessageId = appendProcessingIndicator();
+
+                try {
+                    const apiEndpoint = '/api/Message/SendMessage';
+                    console.log('Sending user details:', userDetails);
+                    const response = await fetch(apiEndpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            Message: message,
+                            UserDetails: userDetails,
+                            IncludeOrderInfo: true,
+                            ConversationHistory: localStorage.getItem('conversationHistory') || ""
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    const detailsSent = localStorage.getItem('detailsSentToWebhook');
+
+                    if (data.reboxStatus === 'success' && !detailsSent) {
+                        showNotification('!User details successfully sent to Webhook');
+                        localStorage.setItem('detailsSentToWebhook', 'true');
+                    } else if (data.reboxStatus === 'error') {
+                        showNotification('Failed to send user details to Rebox. Please try again.', 'error');
+                    }
+                    console.log('Received data:', data);
+
+                    if (data.userDetails) {
+                        userDetails = {
+                            ...userDetails,
+                            ...data.userDetails
+                        };
+                        console.log('Updated user details:', userDetails);
+                    }
+
+                    removeProcessingIndicator(processingMessageId);
+                    appendMessage('bot', data.response);
+
+                    let conversationHistory = localStorage.getItem('conversationHistory') || "";
+                    conversationHistory += `User: ${message}\nBot: ${data.response}\n`;
+                    localStorage.setItem('conversationHistory', conversationHistory);
+
+                    if (data.missingDetails) {
+                        awaitingUserInput = true;
+                        currentMissingDetail = data.response.split(': ')[1];
+                    }
+                } catch (error) {
+                    handleApiError(error);
+                    removeProcessingIndicator(processingMessageId);
+                    appendMessage('bot', `Error: ${error.message}`);
+                }
+            }
+
+            function appendMessage(sender, text) {
+                const chatResponse = document.getElementById('chat-response');
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message');
+                const messageId = 'msg-' + new Date().getTime();
+                messageElement.id = messageId;
+                const avatarElement = document.createElement('img');
+                avatarElement.src = sender === 'user' ? '@Url.Content("~/images/user.webp")' : '@Url.Content("~/images/bot.jpg")';
+                messageElement.appendChild(avatarElement);
+                const messageContent = document.createElement('div');
+                messageContent.classList.add('message-content', sender);
+                if (sender === 'user') {
+                    messageContent.textContent = text;
+                } else {
+                    messageContent.innerHTML = text;
+                }
+                messageElement.appendChild(messageContent);
+                chatResponse.appendChild(messageElement);
+
+                // Scroll to the bottom of the chat container
+                chatResponse.scrollTop = chatResponse.scrollHeight;
+
+                return messageId;
+            }
+
+            function resetWebhookNotification() {
+                localStorage.removeItem('detailsSentToWebhook');
+            }
+
+            function appendProcessingIndicator() {
+                const chatResponse = document.getElementById('chat-response');
+                const processingElement = document.createElement('div');
+                processingElement.classList.add('processing');
+                const processingId = 'processing-' + new Date().getTime();
+                processingElement.id = processingId;
+                processingElement.innerHTML = '<span>הבקשה בעיבוד...</span><div class="spinner"></div>';
+                chatResponse.appendChild(processingElement);
+                chatResponse.scrollTop = chatResponse.scrollHeight;
+                return processingId;
+            }
+
+            function removeProcessingIndicator(processingId) {
+                const processingElement = document.getElementById(processingId);
+                if (processingElement) {
+                    processingElement.remove();
+                }
+            }
+
+            async function requestMissingDetails(prompt, missingDetails) {
+                console.log('Received missingDetails:', missingDetails);
+                if (typeof missingDetails === 'boolean' && missingDetails) {
+                    for (let detail in userDetails) {
+                        if (!userDetails[detail]) {
+                            await promptForDetail(detail);
+                            break;
+                        }
+                    }
+                } else if (Array.isArray(missingDetails)) {
+                    if (missingDetails.length > 0) {
+                        await promptForDetail(missingDetails[0].replace(' ', ''));
+                    }
+                }
+            }
+
+            async function promptForDetail(detail) {
+                const formattedDetail = detail.replace(/([A-Z])/g, ' $1').trim();
+                appendMessage('bot', `אנה ספק את הפרטי החסר ${formattedDetail}:`);
+                awaitingUserInput = true;
+                currentMissingDetail = detail;
+            }
+
+            function handleUserInput(input) {
+                if (currentMissingDetail && input) {
+                    const detailKey = getDetailKey(currentMissingDetail);
+                    userDetails[detailKey] = input;
+                    appendMessage('user', input);
+                    awaitingUserInput = false;
+                    currentMissingDetail = '';
+                    document.getElementById('message').value = '';
+                    sendMessage();
+                } else if (!awaitingUserInput) {
+                    sendMessage();
+                }
+            }
+
+            function showNotification(message, type = 'success') {
+                const notification = document.createElement('div');
+                notification.textContent = message;
+                notification.className = `notification ${type}`;
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 5000);
+            }
+
+            document.getElementById('clearHistoryBtn').addEventListener('click', async () => {
+                await clearConversationHistory();
+                // resetWebhookNotification();
+            });
+
+            async function clearConversationHistory() {
+                try {
+                    const response = await fetch('/api/Message/ClearConversationHistory', {
+                        method: 'POST'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    localStorage.removeItem('conversationHistory');
+                    document.getElementById('chat-response').innerHTML = '';
+                    appendMessage('bot', 'היסטוריית השיחה נוקתה בהצלחה.');
+                } catch (error) {
+                    handleApiError(error);
+                }
+            }
+            
+            async function switchAIService() {
+                debugger
+                try {
+                    const newUseOpenAI = !useOpenAI;
+                    const response = await fetch(`/api/AIService/SetUseOpenAI?useOpenAI=${newUseOpenAI}`, {
+                        method: 'GET'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    console.log(data.message);
+
+                    useOpenAI = newUseOpenAI;
+                    updateAIServiceDisplay();
+                } catch (error) {
+                    handleApiError(error);
+                }
+            }
+
+            function handleApiError(error) {
+                console.error('API Error:', error);
+                appendMessage('bot', `שגיאה: ${error.message}`);
+            }
+
+            function getDetailKey(detail) {
+                // Implement this function to map the detail to the correct key in userDetails
+                return detail;
+            }
+
+            function setupEnterKeyHandler() {
+                const messageTextarea = document.getElementById('message');
+                messageTextarea.addEventListener('keypress', handleEnterKey);
+            }
+
+            function handleEnterKey(event) {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    sendMessage();
+                }
+            }
+        </script>
+
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

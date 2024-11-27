@@ -1,0 +1,43 @@
+﻿@{
+    ViewData["Title"] = "Landing Page";
+}
+
+<section id="hero">
+    <div class="container">
+        <h1>Meet Your New Virtual Assistant</h1>
+        <p>Instantly resolve customer queries with our intelligent chatbot</p>
+        <button onclick="location.href='@Url.Action("SendMessage", "Home")'">Start Chatting Now</button>
+    </div>
+</section>
+
+<section id="features">
+    <div class="container">
+        <h2>Features</h2>
+        <div class="feature">
+            <h3>Availability 24/6</h3>
+            <p>Our chatbot is available around the clock to assist your customers.</p>
+        </div>
+        <div class="feature">
+            <h3>Multi-channel Support</h3>
+            <p>Supports communication via multiple channels including web, mobile, and social media.</p>
+        </div>
+        <div class="feature">
+            <h3>Personalized Responses</h3>
+            <p>Provides personalized responses based on customer data and interaction history.</p>
+        </div>
+    </div>
+</section>
+
+<section id="testimonials">
+    <div class="container">
+        <h2>What Our Customers Say</h2>
+        <p>"This chatbot has revolutionized our customer service experience!" - Jane Doe</p>
+        <p>"Efficient and easy to use. Our customers love it." - John Smith</p>
+    </div>
+</section>
+
+@* <footer>
+    <div class="container">
+        <p>&copy; 2024 Company Name | <a href="privacy.html">Privacy Policy</a> | <a href="terms.html">Terms of Service</a> | <a href="contact.html">Contact</a></p>
+    </div>
+</footer> *@

@@ -1,0 +1,89 @@
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# User-specific files (Mono Auto Generated)
+mono_crash.*
+
+# User-specific files (Visual Studio Code)
+.vscode/
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+
+# Rider
+.idea/
+.idea/*
+.idea_modules/
+.idea_modules/*
+.idea/dictionaries
+.idea/libraries
+
+# Backup & report files from converting an old project file
+UpgradeLog*.XML
+UpgradeLog*.htm
+ServiceFabricBackup/
+
+# SQL Server files
+*.mdf
+*.ldf
+*.ndf
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# VS Code directories
+.vscode/
+.vscode-test
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+# Visual Studio database projects
+*.mdf
+*.ldf
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# RIA/Silverlight projects
+Generated_Code/
+
+# Microsoft Azure Web App publish settings. More info: http://go.microsoft.com/fwlink/?LinkID=208121.
+PublishProfiles/
+
+# Windows Store app package directory
+AppPackages/
+
+# Visual Studio cache files
+.vs/
+
+AI/UI/appsettings.json
+AI/UI/appsettings.Development.json

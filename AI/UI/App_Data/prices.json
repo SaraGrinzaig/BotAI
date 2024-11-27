@@ -1,0 +1,16 @@
+{
+  "products": [
+    {
+      "name": "Glass Sheet",
+      "price": "$50 per square meter"
+    },
+    {
+      "name": "Custom Glass Design",
+      "price": "$150 per hour"
+    },
+    {
+      "name": "Glass Installation",
+      "price": "$200 per installation"
+    }
+  ]
+}

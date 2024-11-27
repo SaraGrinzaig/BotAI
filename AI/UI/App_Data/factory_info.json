@@ -1,0 +1,28 @@
+{
+  "service_hours": {
+    "sunday": "08:00-18:00",
+    "monday": "08:00-18:00",
+    "tuesday": "08:00-18:00",
+    "wednesday": "08:00-18:00",
+    "thursday": "08:00-18:00",
+    "friday": "08:00-14:00",
+    "saturday": "Closed"
+  },
+  "services": {
+    "consultation": {
+      "description": "Professional consultation for your projects.",
+      "duration": "1 hour",
+      "price": "$100"
+    },
+    "support": {
+      "description": "Technical support for our products.",
+      "duration": "30 minutes",
+      "price": "Free"
+    }
+  },
+  "contact_info": {
+    "email": "support@example.com",
+    "phone": "+1-800-123-4567",
+    "address": "123 Main St, Cityville, Country"
+  }
+}
